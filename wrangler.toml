@@ -1,0 +1,19 @@
+name = "cf-worker-todo-app"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+
+# 环境变量配置
+# 在 Cloudflare Dashboard 中设置这些变量，或使用 wrangler secret put 命令
+# 例如: wrangler secret put SUPABASE_URL
+# 例如: wrangler secret put SUPABASE_ANON_KEY
+#
+# 或者直接在下面取消注释并填写（不推荐，但可以用于测试）
+# [vars]
+# SUPABASE_URL = "your-supabase-url"
+# SUPABASE_ANON_KEY = "your-supabase-anon-key"
+
+# 路由配置（可选）
+# routes = [
+#   { pattern = "your-domain.com/*", zone_name = "your-domain.com" }
+# ]
+
