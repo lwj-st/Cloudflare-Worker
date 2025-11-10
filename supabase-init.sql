@@ -61,7 +61,9 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
 
 -- 创建策略（允许所有操作，由应用层控制权限）
--- 如果需要更严格的数据库层权限控制，可以取消注释以下策略
+-- 删除已存在的策略（如果存在）
+DROP POLICY IF EXISTS "Allow all operations on users" ON users;
+DROP POLICY IF EXISTS "Allow all operations on todos" ON todos;
 
 -- 允许所有人读取 users 表（应用层会控制）
 CREATE POLICY "Allow all operations on users" ON users

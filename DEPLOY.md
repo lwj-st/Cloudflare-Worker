@@ -22,7 +22,27 @@
 
 ## Cloudflare Worker 部署
 
-### 方式一：使用 Wrangler CLI（推荐）
+### 方式一：通过 Cloudflare Dashboard 连接 GitHub（推荐，最简单）
+
+**无需命令行，无需手动登录，环境变量在 Dashboard 中直接配置！**
+
+详细步骤请查看：[DASHBOARD_DEPLOY.md](./DASHBOARD_DEPLOY.md)
+
+**快速步骤**：
+1. 在 Cloudflare Dashboard → Workers & Pages → Create application → Workers
+2. 选择 **Connect to Git** → 连接 GitHub 仓库
+3. 配置构建命令：`npm install`
+4. 配置部署命令：`npx wrangler deploy`
+5. 在 **Environment variables** 中添加：
+   - `SUPABASE_URL` = 你的 Supabase URL
+   - `SUPABASE_ANON_KEY` = 你的 Supabase anon key
+6. 点击 **Deploy**
+
+之后每次推送代码到 GitHub 都会自动部署！
+
+---
+
+### 方式二：使用 Wrangler CLI（需要命令行）
 
 #### 步骤 1: 安装依赖
 

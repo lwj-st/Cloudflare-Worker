@@ -79,27 +79,65 @@ ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
    - **Project URL** (SUPABASE_URL)
    - **anon/public key** (SUPABASE_ANON_KEY)
 
-### 4. 配置环境变量
+### 4. 部署到 Cloudflare
 
-有两种方式配置环境变量：
+#### 方式一：通过 Cloudflare Dashboard 连接 GitHub（推荐，最简单）⭐
 
-#### 方式一：使用 Wrangler Secret（推荐，更安全）
+**无需命令行，无需手动登录，环境变量在 Dashboard 中直接配置！**
+
+详细步骤请查看：[DASHBOARD_DEPLOY.md](./DASHBOARD_DEPLOY.md)
+
+**快速步骤**：
+1. 在 Cloudflare Dashboard → Workers & Pages → Create application → Workers
+2. 选择 **Connect to Git** → 连接 GitHub 仓库
+3. 配置：
+   - **构建命令**：`npm install`
+   - **部署命令**：`npx wrangler deploy`
+   - **版本命令**：（留空）
+4. 在 **Environment variables** 中添加：
+   - `SUPABASE_URL` = 你的 Supabase URL
+   - `SUPABASE_ANON_KEY` = 你的 Supabase anon key
+5. 点击 **Deploy**
+
+之后每次推送代码到 GitHub 都会自动部署！
+
+#### 方式二：使用 Wrangler CLI（需要命令行）
 
 ```bash
+# 安装依赖
+npm install
+
 # 登录 Cloudflare
 npx wrangler login
 
 # 设置环境变量
 npx wrangler secret put SUPABASE_URL
-# 输入你的 Supabase Project URL
-
 npx wrangler secret put SUPABASE_ANON_KEY
-# 输入你的 Supabase anon key
+
+# 部署
+npm run deploy
 ```
 
-#### 方式二：在 wrangler.toml 中配置（仅用于开发测试）
+#### 方式三：通过 GitHub Actions 自动部署
 
-编辑 `wrangler.toml`，取消注释并填写：
+1. 在 GitHub 仓库设置中添加 Secrets：
+   - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_ACCOUNT_ID`
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+
+2. 推送代码到 main 分支，GitHub Actions 会自动部署
+
+### 5. 本地开发
+
+```bash
+npm install
+npm run dev
+```
+
+访问 `http://localhost:8787` 查看应用。
+
+**注意**：本地开发需要先设置环境变量，可以在 `wrangler.toml` 中临时配置（仅用于开发）：
 
 ```toml
 [vars]
@@ -107,71 +145,7 @@ SUPABASE_URL = "https://your-project.supabase.co"
 SUPABASE_ANON_KEY = "your-anon-key-here"
 ```
 
-⚠️ **注意**: 方式二会将密钥写入配置文件，不建议用于生产环境。
-
-### 5. 本地开发
-
-```bash
-npm run dev
-```
-
-访问 `http://localhost:8787` 查看应用。
-
-### 6. 部署到 Cloudflare
-
-#### 方式一：使用 Wrangler CLI 部署
-
-```bash
-npm run deploy
-```
-
-#### 方式二：通过 GitHub Actions 自动部署
-
-1. Fork 或克隆此仓库
-2. 在 GitHub 仓库设置中添加以下 Secrets：
-   - `CLOUDFLARE_API_TOKEN`: Cloudflare API Token
-   - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare Account ID
-   - `SUPABASE_URL`: Supabase Project URL
-   - `SUPABASE_ANON_KEY`: Supabase anon key
-
-3. 创建 `.github/workflows/deploy.yml`：
-
-```yaml
-name: Deploy to Cloudflare Workers
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npm install
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-```
-
-#### 方式三：通过 Cloudflare Dashboard 上传
-
-1. 构建项目：
-```bash
-npm run deploy -- --dry-run
-```
-
-2. 在 Cloudflare Dashboard → Workers & Pages → 创建 Worker
-3. 上传构建后的文件
-4. 在 Worker 设置中添加环境变量
+⚠️ **注意**: 不要将包含真实密钥的 `wrangler.toml` 提交到 Git！
 
 ## 安全特性
 

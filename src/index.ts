@@ -1,5 +1,6 @@
 import { registerUser, loginUser } from './auth';
 import { createSupabaseClient } from './db';
+import { createDefaultUser, testDatabaseConnection } from './init';
 
 // CORS 响应头
 const corsHeaders = {
@@ -337,6 +338,24 @@ export default {
     }
 
     // API 路由
+    // 测试数据库连接（无需认证）
+    if (path === '/api/test' && request.method === 'GET') {
+      const result = await testDatabaseConnection(env);
+      return new Response(JSON.stringify(result), {
+        status: result.success ? 200 : 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // 初始化默认用户（从环境变量读取）
+    if (path === '/api/init' && request.method === 'POST') {
+      const result = await createDefaultUser(env);
+      return new Response(JSON.stringify(result), {
+        status: result.success ? 200 : 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (path === '/api/register' && request.method === 'POST') {
       return handleRegister(request, env);
     }
