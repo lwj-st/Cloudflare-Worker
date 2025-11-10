@@ -71,13 +71,43 @@ export async function registerUser(
 
     if (insertError) {
       console.error('注册错误:', insertError);
-      return { success: false, message: '注册失败，请稍后重试' };
+      
+      // 检查是否是表不存在
+      if (insertError.code === 'PGRST116' || insertError.message.includes('relation') || insertError.message.includes('does not exist')) {
+        return { success: false, message: '数据库表不存在，请先执行 supabase-init.sql 创建表' };
+      }
+      
+      // 检查是否是权限问题
+      if (insertError.code === 'PGRST301' || insertError.message.includes('permission') || insertError.message.includes('policy')) {
+        return { success: false, message: '数据库权限错误，请检查 RLS 策略配置' };
+      }
+      
+      // 检查是否是唯一约束冲突
+      if (insertError.code === '23505' || insertError.message.includes('unique')) {
+        return { success: false, message: '用户名已存在' };
+      }
+      
+      return { success: false, message: `注册失败: ${insertError.message}` };
     }
 
     return { success: true, message: '注册成功', userId: newUser.id };
   } catch (error) {
     console.error('注册异常:', error);
-    return { success: false, message: '服务器错误，请稍后重试' };
+    
+    // 检查是否是环境变量问题
+    if (error instanceof Error && error.message.includes('环境变量必须设置')) {
+      return { success: false, message: '服务器配置错误：数据库连接信息未设置' };
+    }
+    
+    // 检查是否是数据库连接问题
+    if (error instanceof Error && (error.message.includes('fetch') || error.message.includes('network'))) {
+      return { success: false, message: '无法连接到数据库，请检查网络连接' };
+    }
+    
+    return { 
+      success: false, 
+      message: '服务器错误，请稍后重试'
+    };
   }
 }
 
@@ -102,7 +132,24 @@ export async function loginUser(
       .eq('username', username)
       .single();
 
-    if (queryError || !user) {
+    if (queryError) {
+      console.error('查询用户错误:', queryError);
+      
+      // 检查是否是表不存在
+      if (queryError.code === 'PGRST116' || queryError.message.includes('relation') || queryError.message.includes('does not exist')) {
+        return { success: false, message: '数据库表不存在，请先执行 supabase-init.sql 创建表' };
+      }
+      
+      // 检查是否是权限问题
+      if (queryError.code === 'PGRST301' || queryError.message.includes('permission') || queryError.message.includes('policy')) {
+        return { success: false, message: '数据库权限错误，请检查 RLS 策略配置' };
+      }
+      
+      // 其他数据库错误
+      return { success: false, message: `数据库错误: ${queryError.message}` };
+    }
+    
+    if (!user) {
       // 即使用户不存在，也返回相同的错误信息，防止用户枚举攻击
       return { success: false, message: '用户名或密码错误' };
     }
@@ -126,7 +173,22 @@ export async function loginUser(
     };
   } catch (error) {
     console.error('登录异常:', error);
-    return { success: false, message: '服务器错误，请稍后重试' };
+    
+    // 检查是否是环境变量问题
+    if (error instanceof Error && error.message.includes('环境变量必须设置')) {
+      return { success: false, message: '服务器配置错误：数据库连接信息未设置' };
+    }
+    
+    // 检查是否是数据库连接问题
+    if (error instanceof Error && (error.message.includes('fetch') || error.message.includes('network'))) {
+      return { success: false, message: '无法连接到数据库，请检查网络连接' };
+    }
+    
+    // 其他错误返回通用消息
+    return { 
+      success: false, 
+      message: '服务器错误，请稍后重试'
+    };
   }
 }
 
